@@ -180,112 +180,27 @@ void setup()
  * @brief Take picture with format JPEG per second
  */
 
-void loop()
-{
-  sleep(1); /* wait for one second to take still picture. */
+void loop() {
+  sleep(1); // Wait for one second to take still picture.
 
-  /* You can change the format of still picture at here also, if you want. */
+  if (take_picture_count < TOTAL_PICTURE_COUNT) {
+    Serial.println("Taking picture...");
+    CamImage img = theCamera.takePicture();
 
-  /* theCamera.setStillPictureImageFormat(
-   *   CAM_IMGSIZE_HD_H,
-   *   CAM_IMGSIZE_HD_V,
-   *   CAM_IMAGE_PIX_FMT_JPG);
-   */
+    // Check if the image is available
+    if (img.isAvailable()) {
+      Serial.println("Image taken. Sending...");
 
-  /* This sample code can take pictures in every one second from starting. */
-
-  if (take_picture_count < TOTAL_PICTURE_COUNT)
-    {
-
-      /* Take still picture.
-      * Unlike video stream(startStreaming) , this API wait to receive image data
-      *  from camera device.
-      */
-  
-      Serial.println("call takePicture()");
-      CamImage img = theCamera.takePicture();
-
-      /* Check availability of the img instance. */
-      /* If any errors occur, the img is not available. */
-
-      if (img.isAvailable())
-        {
-          /* Create file name */
-    
-          char filename[16] = {0};
-          sprintf(filename, "PICT%03d.JPG", take_picture_count);
-    
-          Serial.print("Save taken picture as ");
-          Serial.print(filename);
-          Serial.println("");
-
-          /* Remove the old file with the same file name as new created file,
-           * and create new file.
-           */
-
-          theSD.remove(filename);
-          File myFile = theSD.open(filename, FILE_WRITE);
-          myFile.write(img.getImgBuff(), img.getImgSize());
-          myFile.close();
-        }
-      else
-        {
-          /* The size of a picture may exceed the allocated memory size.
-           * Then, allocate the larger memory size and/or decrease the size of a picture.
-           * [How to allocate the larger memory]
-           * - Decrease jpgbufsize_divisor specified by setStillPictureImageFormat()
-           * - Increase the Memory size from Arduino IDE tools Menu
-           * [How to decrease the size of a picture]
-           * - Decrease the JPEG quality by setJPEGQuality()
-           */
-
-          Serial.println("Failed to take picture");
-        }
+      // Send image data over serial
+      Serial.write(img.getImgBuff(), img.getImgSize());
+      Serial.println("Image data sent.");
+    } else {
+      Serial.println("Failed to take picture");
     }
-  else if (take_picture_count == TOTAL_PICTURE_COUNT)
-    {
-      Serial.println("End.");
-      theCamera.end();
-    }
+  } else if (take_picture_count == TOTAL_PICTURE_COUNT) {
+    Serial.println("End.");
+    theCamera.end();
+  }
 
   take_picture_count++;
 }
-/*For this sample please do the setup as follow: - Set the Preview image to QVGA - Set the frame rate to 30 FPS, to acquire 30 frames of data - take a JPEG picture and save it to SDCard.
-
-After doing the setup, please follow these steps: "initial setting", "error print", "setup()", "preview callback" and "loop()".
-
-Please find the description of these steps here:
-
-2.2.7.1. Initial setting
-/*
- *  camera.ino - Simple camera example sketch
- *  Copyright 2018, 2022 Sony Semiconductor Solutions Corporation
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
- *  This is a test app for the camera library.
- *  This library can only be used on the Spresense with the FCBGA chip package.
- */
-
-#include <SDHCI.h>
-#include <stdio.h>  /* for sprintf */
-
-#include <Camera.h>
-
-#define BAUDRATE                (115200)
-#define TOTAL_PICTURE_COUNT     (10)
-
-SDClass  theSD;
-int take_picture_count = 0;
