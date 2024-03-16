@@ -1,7 +1,7 @@
 import serial
 
 # Configure serial port
-ser = serial.Serial('/dev/ttyCOM4', 115200)  # Update port name if needed
+ser = serial.Serial('/dev/tty.SLAB_USBtoUART', 115200)  # Update port name if needed
 
 # Read image data from serial and save it to a file
 with open('image.jpg', 'wb') as f:
