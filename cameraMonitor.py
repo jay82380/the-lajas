@@ -12,6 +12,7 @@ port.flush()
 while True:
     input("Press enter to get image: ")
     port.write('S'.encode())
+    print(f"(in: {port.in_waiting}, out: {port.out_waiting})")
     sleep(0.01)
 
     # Get the number of bytes for the image
