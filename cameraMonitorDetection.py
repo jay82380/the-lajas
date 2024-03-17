@@ -4,6 +4,7 @@ from cv2 import cvtColor, COLOR_BGR2RGB
 from imageai.Detection import ObjectDetection
 from requests import get
 from os import path
+from playsound import playsound
 
 # Spresence imports
 from serial import Serial
@@ -25,10 +26,11 @@ modelPath = '../yolo.h5'
 BAUDRATE = 2000000
 WIDTH = int(1280/2)
 HEIGHT = int(960/2)
-MAX = 2
+MAX = 3
 
 class CameraMonitor:
     def __init__(self):
+        self.is_playing = False
         self.initialiseDetector()
         self.initialiseWindow()
         self.serialConfig()
@@ -122,8 +124,15 @@ class CameraMonitor:
 
         #Update counter
         self.counter.destroy()
-        if(self.count >= MAX): colour = "red"
-        else: colour = "green"
+        if(self.count >= MAX):
+            colour = "red"
+            if self.is_playing == False:
+                self.is_playing = True
+                sound = Thread(target=self.play)
+                sound.start()
+        else:
+            self.is_playing = False
+            colour = "green"
         self.counter = Label(self.window, text="Total: "+str(self.count), fg=colour, font=("Roboto Mono Bold", 20), justify="left")
         self.counter.place(x=60, y=20, anchor='n')
         self.window.update()
@@ -146,6 +155,9 @@ class CameraMonitor:
         image = cvtColor(image, COLOR_BGR2RGB)
         return Image.fromarray(image)
 
+
+    def play(self):
+        playsound('military-alarm-129017.mp3')
 
 if __name__ == "__main__":
     print("Starting program...")
