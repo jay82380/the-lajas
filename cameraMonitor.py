@@ -12,13 +12,13 @@ port.flush()
 while True:
     input("Press enter to get image: ")
     port.write('S'.encode())
-    print(f"(in: {port.in_waiting}, out: {port.out_waiting})")
-    sleep(0.01)
+    sleep(0.001)
 
     # Get the number of bytes for the image
     print("Reading the image...")
     message = port.readline()
-    message = str(message, "UTF-8")
+    message = message.decode()
+    message = ''.join(filter(lambda x: x != '\x00', message))
     print(message)
 
     # Read the image over serial
