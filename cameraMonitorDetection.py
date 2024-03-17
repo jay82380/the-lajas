@@ -93,7 +93,8 @@ class CameraMonitor:
 
         # Get the number of bytes for the image
         message = self.port.readline()
-        message = str(message, "UTF-8")
+        message = message.decode()
+        message = ''.join(filter(lambda x: x != '\x00', message))
         if(message == ''): print("SIZE TIMEOUT")
 
         # Read the image over serial
