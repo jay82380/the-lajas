@@ -21,6 +21,7 @@ def click(event):
 
 def updateImage():
     global panel
+    global counter
 
     # Message spresence to capture next image
     port.write('S'.encode())
@@ -43,6 +44,10 @@ def updateImage():
     panel.destroy()
     panel = Label(window, image = tkImage)
     panel.grid(column=1, row=1)
+    counter.destroy()
+    counter = Label(window, text="Total: 0", fg="green",
+                       font=("Roboto Mono Bold", 20), justify="left")
+    counter.place(x=60, y=20, anchor='n')
     window.update()
 
     window.after(0, updateImage)
@@ -61,6 +66,9 @@ window.geometry(f'{WIDTH}x{HEIGHT}')
 tkImage = ImageTk.PhotoImage(Image.open("Start.jpg"))
 panel = Label(window, image = tkImage)
 panel.grid(column=1, row=1)
+counter = Label(window, text="Total: 0", fg="green",
+                       font=("Roboto Mono Bold", 20), justify="left")
+counter.place(x=60, y=20, anchor='n')
 window.update()
 
 serialConfig()

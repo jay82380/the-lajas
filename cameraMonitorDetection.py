@@ -25,6 +25,7 @@ modelPath = '../yolo.h5'
 BAUDRATE = 2000000
 WIDTH = int(1280/2)
 HEIGHT = int(960/2)
+MAX = 2
 
 class CameraMonitor:
     def __init__(self):
@@ -50,6 +51,8 @@ class CameraMonitor:
         self.detector.setModelPath(modelPath)
         self.detector.loadModel(detection_speed="flash")
 
+        self.count = 0
+
 
     def initialiseWindow(self):
         # Open tkinter window
@@ -57,17 +60,20 @@ class CameraMonitor:
         self.window.title('Door Monitor')
         self.window.geometry(f'{WIDTH}x{HEIGHT}')
 
-        # Bind mouse click to start monitoring
-        self.window.bind("<Button-1>", self.click)
-
         # Create initial image
         tkImage = ImageTk.PhotoImage(Image.open("Start.jpg"))
         self.panel = Label(self.window, image = tkImage)
         self.panel.grid(column=1, row=1)
+
+        self.counter = Label(self.window, text="Total: 0", fg="green", font=("Roboto Mono Bold", 20), justify="left")
+        self.counter.place(x=60, y=20, anchor='n')
         self.window.update()
 
 
     def serialConfig(self):
+        # Bind mouse click to start monitoring
+        self.window.bind("<Button-1>", self.click)
+
         # Configure serial port
         self.port = Serial('/dev/tty.SLAB_USBtoUART', baudrate=BAUDRATE, timeout=3)
         self.port.flush()
@@ -96,6 +102,7 @@ class CameraMonitor:
         image = Image.open(BytesIO(bytes_read))
         image.save("temp.jpg")
 
+
     def updateImage(self):
         # Copy temp image to detector image
         copyfile("temp.jpg", "detect.jpg")
@@ -112,7 +119,15 @@ class CameraMonitor:
         self.panel.destroy()
         self.panel = Label(self.window, image = tkImage)
         self.panel.grid(column=1, row=1)
+
+        #Update counter
+        self.counter.destroy()
+        if(self.count >= MAX): colour = "red"
+        else: colour = "green"
+        self.counter = Label(self.window, text="Total: "+str(self.count), fg=colour, font=("Roboto Mono Bold", 20), justify="left")
+        self.counter.place(x=60, y=20, anchor='n')
         self.window.update()
+        print(self.count)
 
         # Wait until next image loaded
         process.join()
@@ -124,7 +139,8 @@ class CameraMonitor:
 
         # Detect people in image
         peopleOnly = self.detector.CustomObjects(person=True)
-        image, detections = self.detector.detectObjectsFromImage(custom_objects=peopleOnly, output_type="array", input_image=filename, minimum_percentage_probability=80)
+        image, detections = self.detector.detectObjectsFromImage(custom_objects=peopleOnly, output_type="array", input_image=filename, minimum_percentage_probability=70)
+        self.count = len(detections)
 
         # Convert image back to PIL and return
         image = cvtColor(image, COLOR_BGR2RGB)
