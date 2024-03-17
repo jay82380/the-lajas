@@ -23,14 +23,14 @@ modelRetinaNet = 'https://github.com/OlafenwaMoses/ImageAI/releases/download/1.0
 modelYOLOv3 = 'https://github.com/OlafenwaMoses/ImageAI/releases/download/1.0/yolo.h5'
 modelTinyYOLOv3 = 'https://github.com/OlafenwaMoses/ImageAI/releases/download/1.0/yolo-tiny.h5'
 
-if not os.path.exists('yolo.h5'):
+if not os.path.exists('../yolo.h5'):
     r = req.get(modelYOLOv3, timeout=0.5)
-    with open('yolo.h5', 'wb') as outfile:
+    with open('../yolo.h5', 'wb') as outfile:
         outfile.write(r.content)
 
 detector = ObjectDetection()
 detector.setModelTypeAsYOLOv3()
-detector.setModelPath('yolo.h5')
+detector.setModelPath('../yolo.h5')
 detector.loadModel()
 
 import random
