@@ -172,6 +172,7 @@ void loop()
       for(int i=0; i < size; ++i, ++buf) {
         Serial.write(*buf);
       }
+      // Serial.write(*buf, size);
       digitalWrite(LED0, LOW);
     } else {
       // Serial.println("Failed to take picture");

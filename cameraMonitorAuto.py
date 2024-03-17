@@ -26,13 +26,16 @@ def updateImage():
     sleep(0.01)
 
     # Get the number of bytes for the image
+    # print("Reading the image...")
     message = port.readline()
     message = str(message, "UTF-8")
+    # print(message)
 
     # Read the image over serial
     bytes_read = port.read(int(message))
 
     # Reconstruct the image from the received data
+    # print(bytes_read)
     image = Image.open(io.BytesIO(bytes_read))
     tkImage = ImageTk.PhotoImage(image)
   
