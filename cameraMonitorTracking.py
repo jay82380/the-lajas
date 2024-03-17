@@ -30,8 +30,8 @@ DETECT = "detect.jpg"
 
 class CameraMonitor:
     def __init__(self):
-        self.initialiseWindow()
         self.serialConfig()
+        self.initialiseWindow()
         self.window.mainloop()
 
         self.port.close()
@@ -57,11 +57,6 @@ class CameraMonitor:
         self.newImage()
         image, detections = self.detector.detectObjectsFromImage(custom_objects=self.peopleOnly, output_type="array", input_image=TEMP, minimum_percentage_probability=50)
 
-        # Display to monitor
-        image = cvtColor(image, COLOR_BGR2RGB)
-        Image.fromarray(image)
-        self.showImage(image)
-
         # Initialise trackers for all people in image
         self.count = 0
         frame = imread(TEMP)
@@ -71,6 +66,11 @@ class CameraMonitor:
             tracker = TrackerKCF_create()
             tracker.init(frame, (x, y, w, h))
             self.trackers.append(tracker)
+
+        # Display to monitor
+        image = cvtColor(image, COLOR_BGR2RGB)
+        Image.fromarray(image)
+        self.showImage(image)
 
 
     def initialiseWindow(self):
@@ -104,7 +104,7 @@ class CameraMonitor:
         print(f"Processing next image...")
         # Message spresence to capture next image
         self.port.write('S'.encode())
-        sleep(0.01)
+        sleep(0.1)
 
         # Get the number of bytes for the image
         message = self.port.readline()
