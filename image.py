@@ -1,17 +1,11 @@
 import cv2 as cv
 from imageai.Detection import ObjectDetection
 
-import numpy as np
 import requests as req
 import os as os
+import random
 
 dir = "archive/human detection dataset/pics"
-
-# img = cv.imread('0.png')
-# window_name = 'image'
-# cv.imshow(window_name, img)
-# cv.waitKey(0)
-# cv.destroyAllWindows()
 
 def showImage(img):
     window_name = 'image'
@@ -33,15 +27,15 @@ detector.setModelTypeAsYOLOv3()
 detector.setModelPath('../yolo.h5')
 detector.loadModel()
 
-import random
 peopleImages = os.listdir(dir)
 randomFile = peopleImages[random.randint(0, len(peopleImages) - 1)]
 
 peopleOnly = detector.CustomObjects(person=True)
-detectedImage, detections = detector.detectCustomObjectsFromImage(custom_objects=peopleOnly, output_type="array", input_image=dir+"/{0}".format(randomFile), minimum_percentage_probability=30)
+detectedImage, detections = detector.detectObjectsFromImage(custom_objects=peopleOnly, output_type="array", input_image=dir+"/{0}".format(randomFile), minimum_percentage_probability=30)
 convertedImage = cv.cvtColor(detectedImage, cv.COLOR_RGB2BGR)
+
 showImage(convertedImage)
 
-for eachObject in detections:
-    print(eachObject["name"] , " : ", eachObject["percentage_probability"], " : ", eachObject["box_points"] )
-    print("--------------------------------")
+# for eachObject in detections:
+#     print(eachObject["name"] , " : ", eachObject["percentage_probability"], " : ", eachObject["box_points"] )
+#     print("--------------------------------")
