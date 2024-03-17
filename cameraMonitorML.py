@@ -124,7 +124,7 @@ class CameraMonitor:
 
         # Detect people in image
         peopleOnly = self.detector.CustomObjects(person=True)
-        image, detections = self.detector.detectObjectsFromImage(custom_objects=peopleOnly, output_type="array", input_image=filename, minimum_percentage_probability=30)
+        image, detections = self.detector.detectObjectsFromImage(custom_objects=peopleOnly, output_type="array", input_image=filename, minimum_percentage_probability=80)
 
         # Convert image back to PIL and return
         image = cvtColor(image, COLOR_BGR2RGB)
