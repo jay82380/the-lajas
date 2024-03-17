@@ -12,6 +12,8 @@ from sys import exit
 from tkinter import *
 from PIL import ImageTk,Image
 from time import sleep
+from threading import Thread
+from shutil import copyfile
 
 # Static ML variables
 modelRetinaNet = 'https://github.com/OlafenwaMoses/ImageAI/releases/download/1.0/resnet50_coco_best_v2.0.1.h5'
@@ -75,9 +77,8 @@ class CameraMonitor:
         self.updateImage()
 
 
-    def updateImage(self):
+    def newImage(self):
         print(f"Processing next image...")
-
         # Message spresence to capture next image
         self.port.write('S'.encode())
         sleep(0.01)
@@ -94,7 +95,17 @@ class CameraMonitor:
         # Reconstruct the image from the received data
         image = Image.open(BytesIO(bytes_read))
         image.save("temp.jpg")
-        image = self.detectPeople("temp.jpg")
+
+    def updateImage(self):
+        # Copy temp image to detector image
+        copyfile("temp.jpg", "detect.jpg")
+
+        # Start loading next image
+        process = Thread(target=self.newImage)
+        process.start()
+
+        # Detect people in current image
+        image = self.detectPeople("detect.jpg")
 
         # Update image in window
         tkImage = ImageTk.PhotoImage(image)
@@ -103,6 +114,8 @@ class CameraMonitor:
         self.panel.grid(column=1, row=1)
         self.window.update()
 
+        # Wait until next image loaded
+        process.join()
         self.window.after(0, self.updateImage)
 
 
