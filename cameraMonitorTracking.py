@@ -1,6 +1,6 @@
 print("Importing modules...")
 # ML imports
-from cv2 import cvtColor, COLOR_BGR2RGB
+from cv2 import cvtColor, COLOR_BGR2RGB, TrackerKCF_create, imread, rectangle
 from imageai.Detection import ObjectDetection
 from requests import get
 from os import path
@@ -25,10 +25,11 @@ modelPath = '../yolo.h5'
 BAUDRATE = 2000000
 WIDTH = int(1280/2)
 HEIGHT = int(960/2)
+TEMP = "temp.jpg"
+DETECT = "detect.jpg"
 
 class CameraMonitor:
     def __init__(self):
-        self.initialiseDetector()
         self.initialiseWindow()
         self.serialConfig()
         self.window.mainloop()
@@ -37,7 +38,8 @@ class CameraMonitor:
         exit(0)
 
 
-    def initialiseDetector(self):
+    def initialiseTracker(self):
+        print("Initialising tracker...")
         # Load yolo.h5 model
         if not path.exists(modelPath):
             r = get(modelYOLOv3, timeout=0.5)
@@ -49,6 +51,26 @@ class CameraMonitor:
         self.detector.setModelTypeAsYOLOv3()
         self.detector.setModelPath(modelPath)
         self.detector.loadModel(detection_speed="flash")
+        self.peopleOnly = self.detector.CustomObjects(person=True)
+
+        # Take first image and detect people
+        self.newImage()
+        image, detections = self.detector.detectObjectsFromImage(custom_objects=self.peopleOnly, output_type="array", input_image=TEMP, minimum_percentage_probability=50)
+
+        # Display to monitor
+        image = cvtColor(image, COLOR_BGR2RGB)
+        Image.fromarray(image)
+        self.showImage(image)
+
+        # Initialise trackers for all people in image
+        self.count = 0
+        frame = imread(TEMP)
+        self.trackers = []
+        for detection in detections:
+            x, y, w, h = detection['box_points']
+            tracker = TrackerKCF_create()
+            tracker.init(frame, (x, y, w, h))
+            self.trackers.append(tracker)
 
 
     def initialiseWindow(self):
@@ -74,6 +96,7 @@ class CameraMonitor:
 
 
     def click(self, event):
+        self.initialiseTracker()
         self.updateImage()
 
 
@@ -94,40 +117,52 @@ class CameraMonitor:
 
         # Reconstruct the image from the received data
         image = Image.open(BytesIO(bytes_read))
-        image.save("temp.jpg")
+        image.save(TEMP)
+
 
     def updateImage(self):
         # Copy temp image to detector image
-        copyfile("temp.jpg", "detect.jpg")
+        copyfile(TEMP, DETECT)
 
         # Start loading next image
         process = Thread(target=self.newImage)
         process.start()
 
-        # Detect people in current image
-        image = self.detectPeople("detect.jpg")
-
-        # Update image in window
-        tkImage = ImageTk.PhotoImage(image)
-        self.panel.destroy()
-        self.panel = Label(self.window, image = tkImage)
-        self.panel.grid(column=1, row=1)
-        self.window.update()
+        # Detect people in current image and display to window
+        image = self.detectPeople(DETECT)
+        self.showImage(image)
 
         # Wait until next image loaded
         process.join()
         self.window.after(0, self.updateImage)
 
 
+    def showImage(self, image):
+        print(self.count)
+        # Update PIL image in window
+        tkImage = ImageTk.PhotoImage(image)
+        self.panel.destroy()
+        self.panel = Label(self.window, image = tkImage)
+        self.panel.grid(column=1, row=1)
+        self.window.update()
+
+
     def detectPeople(self, filename):
         print("Detecting people in image...")
 
-        # Detect people in image
-        peopleOnly = self.detector.CustomObjects(person=True)
-        image, detections = self.detector.detectObjectsFromImage(custom_objects=peopleOnly, output_type="array", input_image=filename, minimum_percentage_probability=80)
+        # Tracking people in image
+        frame = imread(filename)
+        self.count = len(self.trackers)
+        for tracker in self.trackers:
+            success, bbox = tracker.update(frame)
+            if success:
+                x, y, w, h = [int(v) for v in bbox]
+                rectangle(frame, (x, y), (x+w, y+h), (0,255,0),2)
+            else:
+                self.count -= 1
 
         # Convert image back to PIL and return
-        image = cvtColor(image, COLOR_BGR2RGB)
+        image = cvtColor(frame, COLOR_BGR2RGB)
         return Image.fromarray(image)
 
 
